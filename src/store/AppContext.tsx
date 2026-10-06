@@ -11,6 +11,7 @@ import {
   isStudentDeleted,
   resultRepository,
   studentRepository,
+  syncSharedStudentsFromServer,
 } from '@/services/storage'
 import type { QuizResult, Student } from '@/types'
 
@@ -244,6 +245,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try {
         const { students: fetched, error } = await fetchGoogleSheetStudents(urlToUse)
         if (error || !fetched || fetched.length === 0) {
+          // If Google Sheet is unreachable or private, fallback to shared server API
+          const shared = await syncSharedStudentsFromServer()
+          if (shared.length > 0) {
+            const validShared = shared.filter((s) => !isStudentDeleted(s))
+            await persist(validShared)
+            setLastSyncedAt(new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
+            setIsSyncing(false)
+            return true
+          }
           setSyncError(error || 'Không tải được danh sách học sinh từ Google Sheet')
           setIsSyncing(false)
           return false
@@ -255,6 +265,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setIsSyncing(false)
         return true
       } catch (e) {
+        // Fallback to shared server API on network error
+        const shared = await syncSharedStudentsFromServer()
+        if (shared.length > 0) {
+          const validShared = shared.filter((s) => !isStudentDeleted(s))
+          await persist(validShared)
+          setLastSyncedAt(new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
+          setIsSyncing(false)
+          return true
+        }
         setSyncError(e instanceof Error ? e.message : 'Lỗi khi đồng bộ từ Google Sheet')
         setIsSyncing(false)
         return false
@@ -294,6 +313,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     [result, studentName, studentClass, googleConfig],
   )
+
+  // Real-time synchronization across devices (phone submits -> computer auto-updates)
+  useEffect(() => {
+    let active = true
+
+    const syncShared = async () => {
+      try {
+        const remote = await syncSharedStudentsFromServer()
+        if (!active || remote.length === 0) return
+
+        setStudents((prev) => {
+          const map = new Map<string, Student>()
+          remote.forEach((s) => map.set(s.id || `${s.name}_${s.className}_${s.topType}`, s))
+          prev.forEach((s) => {
+            const k = s.id || `${s.name}_${s.className}_${s.topType}`
+            if (!map.has(k)) map.set(k, s)
+          })
+          const merged = Array.from(map.values()).filter((s) => !isStudentDeleted(s))
+          if (merged.length !== prev.length || merged.some((s, i) => s.id !== prev[i]?.id)) {
+            studentRepository.saveAll(merged)
+            return merged
+          }
+          return prev
+        })
+      } catch {}
+    }
+
+    // Run on initial load
+    syncShared()
+
+    // Run immediately when user focuses the tab or switches back to browser
+    const onFocus = () => syncShared()
+    window.addEventListener('focus', onFocus)
+    window.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') syncShared()
+    })
+
+    // Auto-poll every 3.5 seconds
+    const pollTimer = setInterval(syncShared, 3500)
+
+    return () => {
+      active = false
+      window.removeEventListener('focus', onFocus)
+      clearInterval(pollTimer)
+    }
+  }, [])
 
   // Auto-sync on mount if Google Sheet URL is configured
   useEffect(() => {

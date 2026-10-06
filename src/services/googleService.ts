@@ -172,6 +172,15 @@ export function saveLocalStudent(student: Student) {
       primaryList.push(student)
     }
     localStorage.setItem('careermap.students.v1', JSON.stringify(primaryList))
+
+    // Broadcast to central server API so all connected devices (PCs, phones) receive it
+    try {
+      fetch('/api/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(student),
+      }).catch(() => {})
+    } catch {}
   } catch (e) {
     console.error('Failed to save local student', e)
   }
