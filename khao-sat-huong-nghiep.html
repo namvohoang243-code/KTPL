@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>La bàn nghề nghiệp – Test tính cách định hướng nghề</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#120e2b; --bg2:#1b1442; --ink:#efecff; --muted:#a9a3d1; --line:rgba(255,255,255,.12);
+  --glass:rgba(255,255,255,.07); --glass2:rgba(255,255,255,.12);
+  --violet:#9b8cff; --sky:#7aa8ff; --mint:#7ee0c3;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+:root[data-theme="light"]{}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){ --bg:#120e2b; --bg2:#1b1442; } /* trang thiết kế dark mode cố định */
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0;min-height:100%;color:var(--ink);background:var(--bg);
+  font-family:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.6;
+  background-image:
+    radial-gradient(60rem 40rem at 10% -10%, rgba(155,140,255,.35), transparent 60%),
+    radial-gradient(50rem 36rem at 100% 10%, rgba(122,168,255,.28), transparent 60%),
+    radial-gradient(40rem 30rem at 50% 110%, rgba(126,224,195,.16), transparent 60%);
+  background-attachment:fixed;
+}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--mint);outline-offset:3px;border-radius:10px}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 20px 64px}
+.glass{background:var(--glass);border:1px solid var(--line);border-radius:22px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0 22px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.05rem;letter-spacing:.2px}
+.brand svg{width:28px;height:28px}
+nav.tabs{display:flex;gap:6px;padding:5px;border-radius:999px}
+nav.tabs button{border:0;background:transparent;padding:8px 16px;border-radius:999px;cursor:pointer;color:var(--muted);font-weight:600;font-size:.92rem}
+nav.tabs button[aria-current="page"]{background:linear-gradient(135deg,var(--violet),var(--sky));color:#13102b}
+h1{font-size:clamp(2.2rem,6.2vw,4.1rem);line-height:1.08;margin:0 0 16px;font-weight:800;letter-spacing:-.02em}
+h2{font-size:1.35rem;margin:0 0 12px;font-weight:800}
+h3{font-size:1.02rem;margin:0 0 8px;font-weight:600}
+p{margin:0 0 12px}
+.muted{color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;cursor:pointer;padding:14px 26px;border-radius:14px;font-weight:600;background:linear-gradient(135deg,var(--violet),var(--sky));color:#13102b;transition:transform .15s,filter .15s}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.08)}
+.btn.ghost{background:var(--glass2);color:var(--ink);border:1px solid var(--line)}
+.btn[disabled]{opacity:.55;cursor:default;transform:none}
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:center;padding:20px 0}
+@media(max-width:820px){.hero{grid-template-columns:1fr}}
+.form{padding:26px}
+label{display:block;font-size:.88rem;color:var(--muted);margin:0 0 6px}
+input[type=text]{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(10,7,30,.55);margin-bottom:16px}
+input::placeholder{color:#7d77a8}
+.type-strip{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--glass);font-size:.85rem}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.quiz{max-width:720px;margin:10px auto 0}
+.progress{height:8px;border-radius:99px;background:var(--glass2);overflow:hidden;margin:8px 0 22px}
+.progress>i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--violet),var(--mint));transition:width .4s ease}
+.qcard{padding:28px}
+.qcard.in{animation:slideIn .35s ease both}
+.qcard.out{animation:slideOut .22s ease both}
+@keyframes slideIn{from{opacity:0;transform:translateX(34px)}to{opacity:1;transform:none}}
+@keyframes slideOut{to{opacity:0;transform:translateX(-34px)}}
+.qtext{font-size:1.35rem;font-weight:600;line-height:1.35;margin:6px 0 20px}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;padding:14px 16px;border-radius:14px;cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.05);transition:background .15s,border-color .15s,transform .15s}
+.opt:hover{background:var(--glass2);border-color:var(--violet);transform:translateX(3px)}
+.opt.sel{background:rgba(155,140,255,.28);border-color:var(--violet)}
+.qnav{display:flex;justify-content:space-between;align-items:center;margin-top:18px}
+.linkbtn{background:none;border:0;color:var(--muted);cursor:pointer;padding:8px 4px}
+.linkbtn:hover{color:var(--ink)}
+.result-head{padding:30px;margin-bottom:18px;position:relative;overflow:hidden}
+.result-head .badge{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:99px;background:var(--glass2);font-size:.85rem;margin-bottom:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+.card{padding:24px}
+.chartbox{position:relative;height:300px}
+ul.clean{margin:0;padding-left:18px}
+ul.clean li{margin-bottom:6px}
+.careers{display:grid;gap:12px}
+.career{padding:16px 18px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.05)}
+.career b{display:block;font-size:1.02rem;margin-bottom:2px}
+.skills{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.skills span{font-size:.78rem;padding:3px 10px;border-radius:99px;background:rgba(122,168,255,.18)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+@media(max-width:700px){.stats{grid-template-columns:1fr}}
+.stat{padding:20px}
+.stat .n{font-size:2rem;font-weight:800;line-height:1.1}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:520px}
+th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);font-size:.93rem}
+th{color:var(--muted);font-weight:500}
+.tag{display:inline-flex;align-items:center;gap:6px}
+[hidden]{display:none!important}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#fff;color:#13102b;padding:12px 20px;border-radius:14px;font-weight:600;z-index:10;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.sample{font-size:.72rem;padding:2px 8px;border-radius:99px;background:rgba(255,255,255,.12);color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="none" stroke="#9b8cff" stroke-width="2"/><path d="M16 5l4 11-4 11-4-11z" fill="#7ee0c3"/><circle cx="16" cy="16" r="2" fill="#120e2b"/></svg>
+      La bàn nghề nghiệp
+    </div>
+    <nav class="tabs glass" aria-label="Điều hướng">
+      <button id="tab-test" data-go="home">Làm bài test</button>
+      <button id="tab-class" data-go="dashboard">Thống kê lớp</button>
+    </nav>
+  </header>
+  <main id="app"></main>
+</div>
+<script>
+/* ---------- DỮ LIỆU ---------- */
+const TYPES = {
+  R:{name:"Thực tế", title:"The Builder", color:"#7ee0c3",
+     intro:"Bạn thích làm ra thứ gì đó chạm vào được, giải quyết vấn đề bằng đôi tay và công cụ.",
+     strengths:["Khéo tay, thực hành giỏi","Bình tĩnh, thực tế khi gặp sự cố","Kiên trì với việc cần làm đến nơi đến chốn"],
+     weak:["Ngại diễn đạt cảm xúc","Dễ mất kiên nhẫn với việc toàn lý thuyết"],
+     env:"Xưởng, phòng thí nghiệm, công trường, ngoài trời; công việc có sản phẩm cụ thể.",
+     careers:[
+       ["Kỹ sư cơ khí – tự động hóa","Thiết kế và vận hành máy móc, dây chuyền sản xuất.",["Tư duy kỹ thuật","CAD","Lập trình PLC"]],
+       ["Kỹ sư xây dựng","Thiết kế, giám sát công trình nhà ở và hạ tầng.",["Tính toán kết cấu","Quản lý công trường","An toàn lao động"]],
+       ["Kỹ thuật viên điện – điện tử","Lắp đặt, bảo trì thiết bị và hệ thống điện.",["Đọc sơ đồ mạch","Chẩn đoán lỗi","Cẩn thận"]],
+       ["Nông nghiệp công nghệ cao","Ứng dụng cảm biến, IoT vào trồng trọt, chăn nuôi.",["Sinh học cơ bản","IoT","Quan sát thực địa"]],
+       ["Phi công / Kỹ thuật bay","Điều khiển và bảo dưỡng phương tiện bay.",["Phản xạ nhanh","Kỷ luật","Tiếng Anh chuyên ngành"]]]},
+  I:{name:"Phân tích", title:"The Thinker", color:"#7aa8ff",
+     intro:"Bạn tò mò, thích tìm hiểu đến tận gốc và tin vào dữ liệu hơn cảm tính.",
+     strengths:["Tư duy logic, phản biện tốt","Tự học và nghiên cứu sâu","Giải quyết vấn đề phức tạp"],
+     weak:["Có thể suy nghĩ quá lâu trước khi hành động","Đôi khi ít chia sẻ ý kiến với người khác"],
+     env:"Phòng nghiên cứu, công ty công nghệ, viện, trường đại học; không gian yên tĩnh để tập trung.",
+     careers:[
+       ["Kỹ sư phần mềm / Data Scientist","Xây dựng hệ thống và phân tích dữ liệu để ra quyết định.",["Lập trình","Thống kê","Tư duy thuật toán"]],
+       ["Nhà nghiên cứu khoa học","Đặt giả thuyết, thiết kế thí nghiệm, công bố kết quả.",["Phương pháp nghiên cứu","Tiếng Anh học thuật","Kiên nhẫn"]],
+       ["Bác sĩ / Dược sĩ","Chẩn đoán, điều trị và nghiên cứu thuốc.",["Sinh học – hóa học","Ra quyết định chính xác","Chịu áp lực"]],
+       ["Chuyên viên phân tích tài chính","Đọc số liệu thị trường để tư vấn đầu tư.",["Excel/SQL","Kinh tế vĩ mô","Tư duy phản biện"]],
+       ["Chuyên gia an ninh mạng","Tìm lỗ hổng và bảo vệ hệ thống thông tin.",["Mạng máy tính","Tư duy đối kháng","Cập nhật liên tục"]]]},
+  A:{name:"Sáng tạo", title:"The Visionary", color:"#c58bff",
+     intro:"Bạn nhìn thế giới bằng góc khác, thích biến ý tưởng thành hình ảnh, câu chuyện, trải nghiệm.",
+     strengths:["Trí tưởng tượng phong phú","Nhạy cảm với cái đẹp và cảm xúc","Dám thử cách làm mới"],
+     weak:["Dễ chán việc lặp lại","Cần học cách quản lý thời gian và deadline"],
+     env:"Studio, agency, không gian linh hoạt, ít gò bó, được tự do thể hiện cá tính.",
+     careers:[
+       ["Thiết kế UI/UX & đồ họa","Thiết kế giao diện, nhận diện thương hiệu.",["Figma","Thẩm mỹ","Đồng cảm người dùng"]],
+       ["Nhà sáng tạo nội dung / Biên tập","Viết, quay dựng, kể chuyện trên đa nền tảng.",["Viết lách","Dựng video","Xu hướng truyền thông"]],
+       ["Kiến trúc sư / Nội thất","Thiết kế không gian sống và làm việc.",["Vẽ kỹ thuật","Không gian 3D","Hiểu nhu cầu khách"]],
+       ["Đạo diễn / Họa sĩ hoạt hình","Xây dựng thế giới hình ảnh cho phim, game.",["Kể chuyện bằng hình","Làm việc nhóm","Phần mềm đồ họa"]],
+       ["Chuyên viên Marketing sáng tạo","Phát triển ý tưởng chiến dịch thương hiệu.",["Copywriting","Insight khách hàng","Thuyết trình"]]]},
+  S:{name:"Kết nối", title:"The Connector", color:"#ff9ec7",
+     intro:"Bạn quan tâm đến con người, giỏi lắng nghe và thấy vui khi giúp người khác tốt lên.",
+     strengths:["Đồng cảm, giao tiếp tự nhiên","Làm việc nhóm và hòa giải tốt","Kiên nhẫn khi hướng dẫn người khác"],
+     weak:["Dễ ôm việc của người khác vào mình","Ngại từ chối hoặc nói thẳng"],
+     env:"Trường học, bệnh viện, tổ chức xã hội, phòng nhân sự; công việc tiếp xúc nhiều người.",
+     careers:[
+       ["Giáo viên / Giảng viên","Truyền cảm hứng và dẫn dắt người học.",["Truyền đạt","Kiên nhẫn","Thiết kế bài học"]],
+       ["Chuyên viên Nhân sự (HR)","Tuyển dụng, đào tạo, chăm sóc nhân viên.",["Phỏng vấn","Luật lao động","Đồng cảm"]],
+       ["Tâm lý học / Tham vấn","Hỗ trợ người khác vượt qua khó khăn tinh thần.",["Lắng nghe","Đạo đức nghề nghiệp","Kiến thức tâm lý"]],
+       ["Điều dưỡng / Công tác xã hội","Chăm sóc sức khỏe, hỗ trợ cộng đồng.",["Chịu áp lực","Chăm sóc","Phối hợp đội nhóm"]],
+       ["Chăm sóc khách hàng / Customer Success","Giúp khách hàng đạt kết quả với sản phẩm.",["Giao tiếp","Xử lý tình huống","Hiểu sản phẩm"]]]},
+  E:{name:"Lãnh đạo", title:"The Leader", color:"#ffc27a",
+     intro:"Bạn thích đặt mục tiêu, thuyết phục và kéo mọi người cùng hành động.",
+     strengths:["Quyết đoán, dám chịu trách nhiệm","Thuyết phục và đàm phán tốt","Nhìn ra cơ hội kinh doanh"],
+     weak:["Dễ áp đặt ý kiến cá nhân","Có thể xem nhẹ chi tiết nhỏ"],
+     env:"Doanh nghiệp năng động, startup, tổ chức có mục tiêu rõ và cơ hội thăng tiến.",
+     careers:[
+       ["Khởi nghiệp / Quản lý kinh doanh","Xây dựng và điều hành doanh nghiệp.",["Ra quyết định","Quản trị rủi ro","Gọi vốn"]],
+       ["Quản lý sản phẩm (Product Manager)","Định hướng sản phẩm, phối hợp thiết kế – kỹ thuật.",["Phân tích thị trường","Ưu tiên công việc","Giao tiếp"]],
+       ["Luật sư / Tư vấn pháp lý","Tranh tụng, đàm phán, tư vấn doanh nghiệp.",["Lập luận","Đọc hiểu văn bản","Đàm phán"]],
+       ["Quản lý bán hàng / Business Development","Mở rộng thị trường và quan hệ đối tác.",["Thuyết phục","Xây quan hệ","Theo đuổi mục tiêu"]],
+       ["Chính trị – Quản lý nhà nước","Hoạch định và triển khai chính sách.",["Tầm nhìn","Lãnh đạo","Hiểu pháp luật"]]]},
+  C:{name:"Tổ chức", title:"The Architect", color:"#9ad7ff",
+     intro:"Bạn giỏi sắp xếp, làm việc có hệ thống và đáng tin cậy khi cần sự chính xác.",
+     strengths:["Cẩn thận, chính xác, đúng hạn","Lập kế hoạch và quản lý quy trình","Đáng tin cậy với số liệu"],
+     weak:["Có thể ngại thay đổi đột ngột","Dễ cầu toàn, mất nhiều thời gian"],
+     env:"Văn phòng, ngân hàng, kế toán – kiểm toán, logistics; quy trình và vai trò rõ ràng.",
+     careers:[
+       ["Kế toán – Kiểm toán","Ghi chép, kiểm tra và báo cáo tài chính.",["Excel","Chuẩn mực kế toán","Cẩn thận"]],
+       ["Chuyên viên Logistics / Chuỗi cung ứng","Tối ưu dòng hàng từ nhà cung cấp đến khách.",["Lập kế hoạch","Phân tích chi phí","Phối hợp"]],
+       ["Quản trị hệ thống / Business Analyst","Chuẩn hóa quy trình và yêu cầu nghiệp vụ.",["Mô hình hóa quy trình","SQL cơ bản","Viết tài liệu"]],
+       ["Ngân hàng – Bảo hiểm","Quản lý hồ sơ, rủi ro và tư vấn tài chính.",["Quy định","Chính xác","Chăm sóc khách hàng"]],
+       ["Quản lý dự án / Điều phối vận hành","Giữ tiến độ, ngân sách và chất lượng.",["Lập kế hoạch","Theo dõi tiến độ","Giao tiếp"]]]}
+};
+const KEYS = Object.keys(TYPES);
+
+const Q = [
+ ["Cuối tuần rảnh, bạn muốn làm gì nhất?",[["Sửa, lắp ráp hoặc tự làm một món đồ","R"],["Đọc và tìm hiểu một chủ đề mới","I"],["Vẽ, viết, quay dựng một thứ gì đó","A"],["Rủ bạn bè đi chơi hoặc giúp ai đó","S"]]],
+ ["Trong dự án nhóm, bạn thường nhận vai trò nào?",[["Đứng ra phân công và chốt hướng đi","E"],["Lập kế hoạch và theo dõi tiến độ","C"],["Đưa ra ý tưởng mới","A"],["Tìm dữ liệu để kiểm chứng","I"]]],
+ ["Nhóm môn học bạn thấy hợp nhất?",[["Công nghệ, Thể dục","R"],["Toán, Lý, Hóa","I"],["Văn, Mỹ thuật, Âm nhạc","A"],["Ngoại ngữ, Giáo dục công dân","S"]]],
+ ["Điều nào khiến bạn tự hào nhất?",[["Giải được một bài toán khó","I"],["Thuyết phục được người khác đồng ý","E"],["Giúp bạn mình vượt qua giai đoạn khó","S"],["Làm mọi thứ gọn gàng, đúng hạn","C"]]],
+ ["Môi trường làm việc mơ ước của bạn?",[["Xưởng hoặc ngoài trời, làm việc thực tế","R"],["Studio tự do, thoải mái sáng tạo","A"],["Công ty năng động, nhiều thử thách","E"],["Văn phòng có quy trình rõ ràng","C"]]],
+ ["Gặp một vấn đề lạ, bạn sẽ làm gì trước?",[["Tìm nguyên nhân gốc rễ","I"],["Thử tháo ra, làm thử","R"],["Chia thành các bước và làm từng bước","C"],["Nghĩ ra một cách tiếp cận khác thường","A"]]],
+ ["Hoạt động ngoại khóa bạn muốn tham gia?",[["Câu lạc bộ tình nguyện","S"],["Tranh biện hoặc ban cán sự","E"],["Văn nghệ, thiết kế","A"],["Robotics hoặc thể thao","R"]]],
+ ["Điểm mạnh lớn nhất của bạn là gì?",[["Tư duy logic","I"],["Biết lắng nghe","S"],["Dám quyết định","E"],["Cẩn thận, chi tiết","C"]]],
+ ["Bạn thấy thoải mái nhất khi dùng công cụ nào?",[["Dụng cụ cầm tay, máy móc","R"],["Phần mềm tính toán, thí nghiệm","I"],["Bút vẽ, máy ảnh, nhạc cụ","A"],["Bảng tính, lịch biểu","C"]]],
+ ["Khi bạn bè gặp rắc rối, bạn thường…",[["Ngồi nghe và ở bên cạnh","S"],["Đưa giải pháp và dẫn dắt làm theo","E"],["Phân tích xem nguyên nhân là gì","I"],["Trực tiếp giúp xử lý việc cụ thể","R"]]],
+ ["Bài thuyết trình của bạn thường mạnh ở điểm nào?",[["Kể chuyện và hình ảnh","A"],["Sức thuyết phục","E"],["Số liệu và lập luận","I"],["Cấu trúc rõ ràng, dễ theo dõi","C"]]],
+ ["Bạn muốn công việc tương lai mang lại điều gì?",[["Sản phẩm hữu hình do mình làm ra","R"],["Giúp người khác tiến bộ","S"],["Khám phá điều chưa ai biết","I"],["Điều hành để đạt kết quả lớn","E"]]],
+ ["Góc học tập của bạn trông như thế nào?",[["Rất ngăn nắp, mọi thứ có chỗ","C"],["Nhiều màu sắc, đồ trang trí","A"],["Nhiều đồ tự chế, dụng cụ","R"],["Sách và ghi chú chất đống","I"]]],
+ ["Ý tưởng kiếm tiền nào bạn thích nhất?",[["Khởi nghiệp bán hàng","E"],["Làm nội dung sáng tạo","A"],["Quản lý thu chi cho người khác","C"],["Dạy kèm","S"]]],
+ ["Bạn thấy hào hứng nhất khi…",[["Tạo ra điều chưa ai làm","A"],["Hiểu ra một điều khó","I"],["Thấy ai đó tốt lên nhờ mình","S"],["Đạt được mục tiêu lớn","E"]]],
+ ["Khi đi du lịch, bạn thích…",[["Khám phá, vận động mạo hiểm","R"],["Chụp ảnh, cảm nhận văn hóa","A"],["Lên lịch trình chi tiết","C"],["Kết bạn với người mới","S"]]],
+ ["Bạn muốn người khác nhận xét mình là…",[["Thông minh","I"],["Độc đáo","A"],["Tử tế","S"],["Bản lĩnh","E"]]],
+ ["Bạn hay xem loại video nào?",[["Tự làm đồ, kỹ thuật","R"],["Khoa học, giải thích kiến thức","I"],["Khởi nghiệp, kỹ năng lãnh đạo","E"],["Nghệ thuật, thiết kế","A"]]],
+ ["Khi làm bài tập lớn, bạn bắt đầu bằng…",[["Chia nhỏ việc và làm từng bước","C"],["Làm thử bản mẫu ngay","R"],["Nghiên cứu kỹ tài liệu","I"],["Họp nhóm để cùng bàn","S"]]],
+ ["Mười năm nữa, bạn muốn mình là…",[["Người dẫn dắt một tổ chức","E"],["Chuyên gia hàng đầu trong lĩnh vực","I"],["Người tạo ảnh hưởng tốt cho cộng đồng","S"],["Người sáng tạo có dấu ấn riêng","A"]]]
+];
+
+/* 15 bạn mẫu để xem thống kê ngay */
+const SEED = [
+ ["Minh Anh",{R:1,I:6,A:2,S:2,E:3,C:6}],["Gia Bảo",{R:5,I:6,A:1,S:2,E:3,C:3}],["Thu Hà",{R:1,I:2,A:6,S:6,E:2,C:3}],
+ ["Quốc Khánh",{R:2,I:3,A:2,S:2,E:8,C:3}],["Ngọc Lan",{R:1,I:3,A:7,S:4,E:2,C:3}],["Đức Huy",{R:7,I:5,A:1,S:2,E:2,C:3}],
+ ["Phương Linh",{R:1,I:2,A:3,S:8,E:3,C:3}],["Tuấn Kiệt",{R:3,I:8,A:2,S:2,E:2,C:3}],["Bảo Châu",{R:1,I:3,A:5,S:3,E:3,C:5}],
+ ["Hoàng Nam",{R:4,I:4,A:2,S:2,E:6,C:2}],["Khánh Vy",{R:1,I:2,A:4,S:7,E:4,C:2}],["Thành Đạt",{R:6,I:4,A:2,S:2,E:4,C:2}],
+ ["Mai Chi",{R:1,I:5,A:2,S:3,E:2,C:7}],["Anh Tú",{R:2,I:3,A:7,S:2,E:4,C:2}],["Yến Nhi",{R:1,I:2,A:2,S:6,E:3,C:6}]
+].map(([name,scores],i)=>({id:"seed"+i,name,cls:"10A1",scores,seed:true}));
+
+/* =====================================================================
+   CẤU HÌNH KHẢO SÁT (giáo viên điền phần này, xem hướng dẫn kèm theo)
+   Để trống FORM_URL thì trang chạy chế độ thử: lưu kết quả ngay trên máy.
+   ===================================================================== */
+const CONFIG = {
+  CLASS_SIZE: 30,
+  // Link gửi của Google Form
+  FORM_URL: "https://docs.google.com/forms/d/e/1FAIpQLSf-fALsGvgBe8ZDXT0FEDu8MitzVzjkE4MILt2Fu9cgJXYa0g/formResponse",
+  // Mã "entry.xxxxx" của từng câu hỏi trong Form
+  ENTRIES: {"name":"entry.1725089956","cls":"entry.1176256046","group":"entry.1527121567","code":"entry.1567656317","R":"entry.1520246837","I":"entry.598281442","A":"entry.813077145","S":"entry.1677780285","E":"entry.1448984700","C":"entry.1299200056","career":"entry.66742343"},
+  // (Tùy chọn) Link CSV của Google Sheet đã "Xuất bản lên web", để tab Thống kê lớp đọc dữ liệu thật
+  SHEET_CSV_URL: "",
+  // false = bảng thống kê ẩn tên, chỉ hiện "Bạn 1, Bạn 2…"
+  SHOW_NAMES: true
+};
+const CLASS_SIZE = CONFIG.CLASS_SIZE;
+const ONLINE = !!CONFIG.FORM_URL;
+const STATS_ONLINE = !!CONFIG.SHEET_CSV_URL;
+const KEY = "huong-nghiep-class-v1";
+let memStore = null;
+function loadSaved(){ try{ const v=localStorage.getItem(KEY); return v?JSON.parse(v):[]; }catch(e){ return memStore||[]; } }
+function persist(list){ try{ localStorage.setItem(KEY,JSON.stringify(list)); }catch(e){ memStore=list; } }
+
+/* ---------- TIỆN ÍCH ---------- */
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ranked = sc => KEYS.slice().sort((a,b)=>sc[b]-sc[a] || KEYS.indexOf(a)-KEYS.indexOf(b));
+const tag = k => `<span class="tag"><i class="dot" style="background:${TYPES[k].color}"></i>${TYPES[k].name}</span>`;
+function topCareers(sc){ const r=ranked(sc); return [TYPES[r[0]].careers[0][0], TYPES[r[1]].careers[0][0]]; }
+let charts=[];
+function killCharts(){ charts.forEach(c=>c.destroy()); charts=[]; }
+function setChartDefaults(){
+  Chart.defaults.color="#cfc9f5"; Chart.defaults.font.family='"Be Vietnam Pro",system-ui,sans-serif';
+  Chart.defaults.borderColor="rgba(255,255,255,.12)";
+}
+function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.setAttribute("role","status"); t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2200); }
+
+/* ---------- TRẠNG THÁI ---------- */
+const S = { view:"home", name:"", cls:"10A1", i:0, answers:[], scores:null, saved:false };
+
+function go(view){
+  if(view==="dashboard" && ONLINE && !STATS_ONLINE) view="home";
+  S.view=view; killCharts(); render(); window.scrollTo({top:0});
+}
+document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>{
+  if(b.dataset.go==="home" && S.view==="quiz") return;
+  go(b.dataset.go==="home" && S.scores ? "home" : b.dataset.go);
+}));
+
+/* ---------- VIEW: TRANG CHỦ ---------- */
+function viewHome(){
+  return `
+  <section class="hero">
+    <div>
+      <h1>Bạn hợp với nghề nào?</h1>
+      <p class="muted" style="font-size:1.1rem;max-width:34em">20 câu hỏi ngắn, khoảng 5 phút. Dựa trên mô hình Holland (RIASEC), bài test chỉ ra nhóm tính cách nổi trội của bạn và gợi ý các ngành nghề phù hợp để bạn tham khảo.</p>
+      <div class="type-strip" aria-label="Sáu nhóm tính cách">
+        ${KEYS.map(k=>`<span class="chip"><i class="dot" style="background:${TYPES[k].color}"></i>${TYPES[k].name}</span>`).join("")}
+      </div>
+    </div>
+    <div class="glass form">
+      <h2>Bắt đầu nào</h2>
+      <label for="name">Tên hoặc biệt danh</label>
+      <input id="name" type="text" maxlength="30" placeholder="Ví dụ: Minh Anh" value="${esc(S.name)}" autocomplete="off">
+      <label for="cls">Lớp</label>
+      <input id="cls" type="text" maxlength="10" value="${esc(S.cls)}" autocomplete="off">
+      <button class="btn" id="start" style="width:100%">Bắt đầu làm bài test</button>
+      <p class="muted" style="font-size:.82rem;margin:14px 0 0">Kết quả chỉ lưu trên trình duyệt này để tổng hợp thống kê lớp.</p>
+    </div>
+  </section>`;
+}
+function bindHome(){
+  $("#start").addEventListener("click",()=>{
+    const n=$("#name").value.trim();
+    if(!n){ $("#name").focus(); toast("Nhập tên hoặc biệt danh trước nhé"); return; }
+    S.name=n; S.cls=($("#cls").value.trim()||"10A1"); S.i=0; S.answers=[]; S.scores=null; S.saved=false;
+    go("quiz");
+  });
+}
+
+/* ---------- VIEW: QUIZ ---------- */
+function viewQuiz(){
+  const [q,opts]=Q[S.i]; const pct=Math.round(S.i/Q.length*100); const picked=S.answers[S.i];
+  return `
+  <section class="quiz">
+    <div class="muted" style="display:flex;justify-content:space-between;font-size:.9rem">
+      <span>Câu ${S.i+1} / ${Q.length}</span><span>${pct}% hoàn thành</span>
+    </div>
+    <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div>
+    <div class="glass qcard in" id="qcard">
+      <div class="qtext">${esc(q)}</div>
+      <div class="opts">
+        ${opts.map((o,idx)=>`<button class="opt ${picked===idx?'sel':''}" data-i="${idx}">${esc(o[0])}</button>`).join("")}
+      </div>
+      <div class="qnav">
+        <button class="linkbtn" id="back" ${S.i===0?'disabled style="visibility:hidden"':''}>Câu trước</button>
+        <span class="muted" style="font-size:.85rem">Chọn một đáp án để sang câu tiếp</span>
+      </div>
+    </div>
+  </section>`;
+}
+function bindQuiz(){
+  document.querySelectorAll(".opt").forEach(b=>b.addEventListener("click",()=>{
+    S.answers[S.i]=+b.dataset.i;
+    b.classList.add("sel");
+    const card=$("#qcard"); card.classList.remove("in"); card.classList.add("out");
+    setTimeout(()=>{
+      if(S.i<Q.length-1){ S.i++; render(); } else { finish(); }
+    },220);
+  }));
+  const back=$("#back"); if(back) back.addEventListener("click",()=>{ if(S.i>0){ S.i--; render(); } });
+}
+function finish(){
+  const sc={R:0,I:0,A:0,S:0,E:0,C:0};
+  S.answers.forEach((a,qi)=>{ sc[Q[qi][1][a][1]]++; });
+  S.scores=sc; S.saved=false; S.send=ONLINE?"sending":"off"; go("result"); if(ONLINE) doSend();
+}
+
+/* ---------- VIEW: KẾT QUẢ ---------- */
+function viewResult(){
+  const r=ranked(S.scores), top=TYPES[r[0]], code=r.slice(0,3).join("");
+  return `
+  <section>
+    <div class="glass result-head" style="border-color:${top.color}66">
+      <span class="badge"><i class="dot" style="background:${top.color}"></i>Mã Holland của bạn: <b>${code}</b></span>
+      <h1 style="margin-bottom:10px">${esc(S.name)} thuộc nhóm ${top.name}<br><span style="color:${top.color}">${top.title}</span></h1>
+      <p style="max-width:42em;font-size:1.08rem;margin:0">${top.intro}</p>
+      <p class="muted" style="margin:10px 0 0">Nhóm phụ: ${tag(r[1])} và ${tag(r[2])}</p>
+    </div>
+    <div class="grid2" style="margin-bottom:18px">
+      <div class="glass card"><h2>Biểu đồ tính cách</h2><div class="chartbox"><canvas id="radar" aria-label="Biểu đồ radar sáu nhóm tính cách" role="img"></canvas></div></div>
+      <div class="glass card"><h2>Tỉ lệ các nét tính cách</h2><div class="chartbox"><canvas id="donut" aria-label="Biểu đồ tròn tỉ lệ sáu nhóm tính cách" role="img"></canvas></div></div>
+    </div>
+    <div class="grid2" style="margin-bottom:18px">
+      <div class="glass card">
+        <h2>Điểm mạnh</h2><ul class="clean">${top.strengths.map(x=>`<li>${x}</li>`).join("")}</ul>
+        <h3 style="margin-top:18px">Điểm cần lưu ý</h3><ul class="clean">${top.weak.map(x=>`<li>${x}</li>`).join("")}</ul>
+      </div>
+      <div class="glass card">
+        <h2>Môi trường phù hợp</h2><p>${top.env}</p>
+        <p class="muted" style="font-size:.9rem">Kết quả chỉ mang tính tham khảo. Hãy thử thêm hoạt động thực tế và trò chuyện với người làm nghề để hiểu rõ hơn.</p>
+      </div>
+    </div>
+    <div class="glass card">
+      <h2>Ngành nghề gợi ý cho bạn</h2>
+      <div class="careers">
+        ${top.careers.map(c=>`<div class="career"><b>${c[0]}</b><span class="muted">${c[1]}</span><div class="skills">${c[2].map(s=>`<span>${s}</span>`).join("")}</div></div>`).join("")}
+      </div>
+      <div class="actions">
+        ${ONLINE
+          ? `<p id="sendstat" class="muted" role="status" style="width:100%;margin:0">${sendText()}</p><button class="btn" id="resend" ${S.send==="fail"?'':'hidden'}>Gửi lại</button>`
+          : `<button class="btn" id="save" ${S.saved?'disabled':''}>${S.saved?'Đã lưu vào thống kê lớp':'Lưu kết quả vào thống kê lớp'}</button>`}
+        <button class="btn ghost" id="retry">Làm lại bài test</button>
+        ${(!ONLINE||STATS_ONLINE)?'<button class="btn ghost" id="seeclass">Xem thống kê lớp</button>':''}
+      </div>
+    </div>
+  </section>`;
+}
+function bindResult(){
+  const r=ranked(S.scores);
+  const labels=KEYS.map(k=>TYPES[k].name), data=KEYS.map(k=>Math.round(S.scores[k]/Q.length*100)), cols=KEYS.map(k=>TYPES[k].color);
+  charts.push(new Chart($("#radar"),{type:"radar",
+    data:{labels,datasets:[{label:"%",data,backgroundColor:"rgba(155,140,255,.35)",borderColor:"#9b8cff",pointBackgroundColor:cols,pointBorderColor:"#fff",borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{r:{beginAtZero:true,suggestedMax:Math.max(40,...data),ticks:{display:false,stepSize:10},grid:{color:"rgba(255,255,255,.14)"},angleLines:{color:"rgba(255,255,255,.14)"},pointLabels:{color:"#efecff",font:{size:13}}}}}}));
+  charts.push(new Chart($("#donut"),{type:"doughnut",
+    data:{labels,datasets:[{data,backgroundColor:cols,borderColor:"#1b1442",borderWidth:3}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{position:"bottom",labels:{boxWidth:12,padding:14}},tooltip:{callbacks:{label:c=>` ${c.label}: ${c.parsed}%`}}}}}));
+  const sv=$("#save");
+  if(sv) sv.addEventListener("click",()=>{
+    const list=loadSaved(); list.push({id:"u"+Date.now(),name:S.name,cls:S.cls,scores:S.scores,seed:false});
+    persist(list); S.saved=true; toast("Đã lưu vào thống kê lớp"); go("dashboard");
+  });
+  const rs=$("#resend"); if(rs) rs.addEventListener("click",()=>doSend());
+  $("#retry").addEventListener("click",()=>{ S.i=0;S.answers=[];S.scores=null;S.saved=false; go("quiz"); });
+  const sc2=$("#seeclass"); if(sc2) sc2.addEventListener("click",()=>{ if(STATS_ONLINE){remoteState="idle";} go("dashboard"); });
+}
+
+/* ---------- VIEW: DASHBOARD ---------- */
+let remote=null, remoteState="idle";
+function parseCSV(t){const rows=[];let row=[],f="",q=false;for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}else if(c==='"')q=true;else if(c===','){row.push(f);f=""}else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;row.push(f);rows.push(row);row=[];f=""}else f+=c}if(f!==""||row.length){row.push(f);rows.push(row)}return rows}
+async function loadRemote(){
+  if(!STATS_ONLINE||remoteState==="loading"||remoteState==="ok") return;
+  remoteState="loading";
+  try{
+    const u=CONFIG.SHEET_CSV_URL+(CONFIG.SHEET_CSV_URL.includes("?")?"&":"?")+"t="+Date.now();
+    const res=await fetch(u); if(!res.ok) throw new Error("http");
+    const rows=parseCSV(await res.text()).slice(1);
+    /* Thứ tự cột: Dấu thời gian, Tên, Lớp, Nhóm chính, Mã Holland, R, I, A, S, E, C, Nghề */
+    remote=rows.map((r,i)=>{const sc={};KEYS.forEach((k,j)=>sc[k]=parseInt(r[5+j])||0);
+      return {id:"r"+i,name:(r[1]||"").trim()||"Ẩn danh",cls:(r[2]||"").trim(),scores:sc};})
+      .filter(x=>KEYS.reduce((a,k)=>a+x.scores[k],0)>0);
+    remoteState="ok";
+  }catch(e){ remoteState="fail"; }
+  if(S.view==="dashboard"){ killCharts(); render(); }
+}
+function allStudents(){ return STATS_ONLINE ? (remote||[]) : (ONLINE ? [] : SEED.concat(loadSaved())); }
+
+/* ---------- GỬI VỀ GOOGLE FORM ---------- */
+async function doSend(){
+  const r=ranked(S.scores), E=CONFIG.ENTRIES, top=TYPES[r[0]];
+  const body=new URLSearchParams();
+  const put=(k,v)=>{ if(E[k]) body.append(E[k],v); };
+  put("name",S.name); put("cls",S.cls); put("group",top.name+" – "+top.title); put("code",r.slice(0,3).join(""));
+  KEYS.forEach(k=>put(k,String(S.scores[k]))); put("career",top.careers[0][0]);
+  S.send="sending"; updateSend();
+  try{
+    await fetch(CONFIG.FORM_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/x-www-form-urlencoded"},body});
+    S.send="ok";
+  }catch(e){ S.send="fail"; }
+  updateSend();
+}
+function sendText(){
+  return S.send==="ok" ? "Đã gửi kết quả cho giáo viên. Bạn có thể đóng trang này."
+       : S.send==="fail" ? "Chưa gửi được kết quả. Kiểm tra mạng rồi bấm Gửi lại."
+       : "Đang gửi kết quả cho giáo viên…";
+}
+function updateSend(){
+  const el=$("#sendstat"); if(el) el.textContent=sendText();
+  const b=$("#resend"); if(b) b.hidden = S.send!=="fail";
+}
+function viewDashboard(){
+  const list=allStudents();
+  const cnt={R:0,I:0,A:0,S:0,E:0,C:0};
+  list.forEach(s=>cnt[ranked(s.scores)[0]]++);
+  const dom=ranked(cnt)[0];
+  const real=list.filter(s=>!s.seed).length;
+  const empty=list.length===0;
+  const note = STATS_ONLINE
+    ? (remoteState==="fail" ? "Không tải được số liệu từ Google Sheet. Kiểm tra link CSV rồi tải lại." : remoteState==="loading"||remoteState==="idle" ? "Đang tải số liệu từ Google Sheet…" : "Số liệu lấy từ Google Sheet của giáo viên, cập nhật mỗi lần mở hoặc bấm Tải lại.")
+    : "15 bạn đầu tiên là dữ liệu mẫu để xem biểu đồ. Mỗi bạn lưu kết quả trên trình duyệt này sẽ được cộng dồn vào đây.";
+  return `
+  <section>
+    <h1 style="font-size:clamp(1.9rem,5vw,3rem)">Thống kê lớp học</h1>
+    <p class="muted" role="status">${note}</p>
+    <div class="stats">
+      <div class="glass stat"><div class="muted">Đã làm bài</div><div class="n">${list.length} <span class="muted" style="font-size:1rem;font-weight:400">/ ${CLASS_SIZE} bạn</span></div>
+        <div class="progress" style="margin:10px 0 0"><i style="width:${Math.min(100,Math.round(list.length/CLASS_SIZE*100))}%"></i></div></div>
+      <div class="glass stat"><div class="muted">Nhóm nổi trội nhất lớp</div>${empty?'<div class="n">Chưa có</div><div class="muted">Chờ bạn đầu tiên làm bài</div>':`<div class="n" style="color:${TYPES[dom].color}">${TYPES[dom].name}</div><div class="muted">${cnt[dom]} bạn · ${TYPES[dom].title}</div>`}</div>
+      ${STATS_ONLINE
+        ? `<div class="glass stat"><div class="muted">Còn chưa làm bài</div><div class="n">${Math.max(0,CLASS_SIZE-list.length)}</div><div class="muted">trên tổng ${CLASS_SIZE} bạn</div></div>`
+        : `<div class="glass stat"><div class="muted">Kết quả thật đã lưu</div><div class="n">${real}</div><div class="muted">${real?'Từ trình duyệt này':'Chưa có, hãy làm bài test'}</div></div>`}
+    </div>
+    <div class="grid2" style="margin-bottom:18px">
+      <div class="glass card"><h2>Phân bố nhóm tính cách</h2><div class="chartbox"><canvas id="bar" role="img" aria-label="Biểu đồ cột số bạn theo từng nhóm tính cách"></canvas></div></div>
+      <div class="glass card"><h2>Nghề được gợi ý nhiều nhất</h2><div class="chartbox"><canvas id="pie" role="img" aria-label="Biểu đồ tròn các nghề gợi ý nhiều nhất"></canvas></div></div>
+    </div>
+    <div class="glass card">
+      <h2>Kết quả từng bạn</h2>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Tên</th><th>Lớp</th><th>Nhóm tính cách</th><th>Nghề gợi ý chính</th></tr></thead>
+        <tbody>${list.map((s,ix)=>{const r=ranked(s.scores);return `<tr><td>${CONFIG.SHOW_NAMES?esc(s.name):"Bạn "+(ix+1)} ${s.seed?'<span class="sample">mẫu</span>':''}</td><td>${esc(s.cls)}</td><td>${tag(r[0])}</td><td>${TYPES[r[0]].careers[0][0]}</td></tr>`}).join("")}</tbody>
+      </table></div>
+      <div class="actions">
+        <button class="btn" id="take">Làm bài test</button>
+        ${STATS_ONLINE?'<button class="btn ghost" id="reload">Tải lại số liệu</button>':(real?'<button class="btn ghost" id="clear">Xóa kết quả đã lưu</button>':'')}
+      </div>
+    </div>
+  </section>`;
+}
+function bindDashboard(){
+  if(STATS_ONLINE && remoteState==="idle") loadRemote();
+  const rl=$("#reload"); if(rl) rl.addEventListener("click",()=>{ remoteState="idle"; killCharts(); render(); });
+  const list=allStudents();
+  const cnt={R:0,I:0,A:0,S:0,E:0,C:0}; const car={};
+  list.forEach(s=>{ cnt[ranked(s.scores)[0]]++; topCareers(s.scores).forEach(c=>car[c]=(car[c]||0)+1); });
+  charts.push(new Chart($("#bar"),{type:"bar",
+    data:{labels:KEYS.map(k=>TYPES[k].name),datasets:[{label:"Số bạn",data:KEYS.map(k=>cnt[k]),backgroundColor:KEYS.map(k=>TYPES[k].color),borderRadius:8}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0,stepSize:1}},x:{grid:{display:false}}}}}));
+  const top=Object.entries(car).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const pal=["#9b8cff","#7aa8ff","#7ee0c3","#ff9ec7","#ffc27a","#c58bff"];
+  charts.push(new Chart($("#pie"),{type:"doughnut",
+    data:{labels:top.map(t=>t[0]),datasets:[{data:top.map(t=>t[1]),backgroundColor:pal,borderColor:"#1b1442",borderWidth:3}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"55%",plugins:{legend:{position:"bottom",labels:{boxWidth:12,padding:10,font:{size:11}}}}}}));
+  $("#take").addEventListener("click",()=>go("home"));
+  const c=$("#clear"); if(c) c.addEventListener("click",()=>{ if(confirm("Xóa toàn bộ kết quả đã lưu trên trình duyệt này?")){ persist([]); go("dashboard"); } });
+}
+
+/* ---------- RENDER ---------- */
+function render(){
+  const tc=$("#tab-class"); if(tc) tc.hidden = ONLINE && !STATS_ONLINE;
+  const nv=document.querySelector("nav.tabs"); if(nv) nv.hidden = ONLINE && !STATS_ONLINE;
+  const app=$("#app");
+  const v=S.view;
+  app.innerHTML = v==="home"?viewHome(): v==="quiz"?viewQuiz(): v==="result"?viewResult(): viewDashboard();
+  document.querySelectorAll("nav.tabs button").forEach(b=>{
+    const active=(b.dataset.go==="dashboard")===(v==="dashboard");
+    if(active) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current");
+  });
+  if(v==="home") bindHome(); else if(v==="quiz") bindQuiz(); else if(v==="result") bindResult(); else bindDashboard();
+}
+setChartDefaults();
+render();
+</script>
+</body>
+</html>
