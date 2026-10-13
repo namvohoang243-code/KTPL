@@ -1,5 +1,10 @@
-// In-memory cache for Vercel serverless deployments
-let memoryStudents = []
+// Central storage state for serverless deployments
+let memoryState = {
+  students: [],
+  deletedKeys: [],
+  googleConfig: null,
+  updatedAt: Date.now(),
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -11,31 +16,71 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'GET') {
-    return res.status(200).json({ success: true, students: memoryStudents })
+    return res.status(200).json({
+      success: true,
+      students: memoryState.students,
+      deletedKeys: memoryState.deletedKeys,
+      googleConfig: memoryState.googleConfig,
+      updatedAt: memoryState.updatedAt,
+    })
   }
 
   if (req.method === 'POST') {
     try {
       const data = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
 
-      if (Array.isArray(data?.students)) {
-        memoryStudents = data.students
-        return res.status(200).json({ success: true, count: memoryStudents.length })
+      // 1. Restore all deleted students
+      if (data?.restoreAll === true) {
+        memoryState.deletedKeys = []
+        memoryState.updatedAt = Date.now()
+        return res.status(200).json({ success: true, restored: true, deletedKeys: [] })
       }
 
+      // 2. Sync deletedKeys
+      if (Array.isArray(data?.deletedKeys)) {
+        memoryState.deletedKeys = Array.from(new Set([...memoryState.deletedKeys, ...data.deletedKeys]))
+      }
+
+      // 3. Sync googleConfig
+      if (data?.googleConfig) {
+        memoryState.googleConfig = { ...(memoryState.googleConfig || {}), ...data.googleConfig }
+      }
+
+      // 4. Batch save students
+      if (Array.isArray(data?.students)) {
+        memoryState.students = data.students
+        memoryState.updatedAt = Date.now()
+        return res.status(200).json({
+          success: true,
+          count: memoryState.students.length,
+          deletedKeys: memoryState.deletedKeys,
+          googleConfig: memoryState.googleConfig,
+        })
+      }
+
+      // 5. Single student
       if (data && (data.name || data.id)) {
-        const idx = memoryStudents.findIndex(
-          (s) => (data.id && s.id === data.id) || (s.name === data.name && s.className === data.className),
+        const idx = memoryState.students.findIndex(
+          (s) =>
+            (data.id && s.id === data.id) ||
+            (s.name === data.name && s.className === data.className && s.submittedAt === data.submittedAt),
         )
         if (idx >= 0) {
-          memoryStudents[idx] = data
+          memoryState.students[idx] = data
         } else {
-          memoryStudents = [data, ...memoryStudents]
+          memoryState.students = [data, ...memoryState.students]
         }
-        return res.status(200).json({ success: true, student: data, total: memoryStudents.length })
+        memoryState.updatedAt = Date.now()
+        return res.status(200).json({
+          success: true,
+          student: data,
+          total: memoryState.students.length,
+          deletedKeys: memoryState.deletedKeys,
+        })
       }
 
-      return res.status(400).json({ error: 'Invalid data' })
+      memoryState.updatedAt = Date.now()
+      return res.status(200).json({ success: true, memoryState })
     } catch (err) {
       return res.status(500).json({ error: String(err) })
     }
@@ -44,9 +89,25 @@ export default async function handler(req, res) {
   if (req.method === 'DELETE') {
     try {
       const data = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
-      const { id, name } = data || {}
-      memoryStudents = memoryStudents.filter((s) => (id ? s.id !== id : s.name !== name))
-      return res.status(200).json({ success: true, remaining: memoryStudents.length })
+      const { id, name, signatures } = data || {}
+
+      const sigsToAdd = Array.isArray(signatures)
+        ? signatures
+        : [id, name].filter(Boolean)
+      memoryState.deletedKeys = Array.from(new Set([...memoryState.deletedKeys, ...sigsToAdd]))
+
+      memoryState.students = memoryState.students.filter((s) => {
+        if (id && s.id === id) return false
+        if (name && s.name === name) return false
+        return true
+      })
+      memoryState.updatedAt = Date.now()
+
+      return res.status(200).json({
+        success: true,
+        remaining: memoryState.students.length,
+        deletedKeys: memoryState.deletedKeys,
+      })
     } catch (err) {
       return res.status(500).json({ error: String(err) })
     }

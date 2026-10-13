@@ -86,19 +86,36 @@ export interface ResultRepository {
   clear(): void
 }
 
-export async function syncSharedStudentsFromServer(): Promise<Student[]> {
+export interface SharedSyncData {
+  students: Student[]
+  deletedKeys: string[]
+  googleConfig: any | null
+  updatedAt: number
+}
+
+export async function syncSharedDataFromServer(): Promise<SharedSyncData | null> {
   try {
     const res = await fetch('/api/students', { signal: AbortSignal.timeout(3000) })
     if (res.ok) {
       const data = await res.json()
-      if (data && Array.isArray(data.students)) {
-        return data.students
+      if (data && (Array.isArray(data.students) || Array.isArray(data.deletedKeys))) {
+        return {
+          students: Array.isArray(data.students) ? data.students : [],
+          deletedKeys: Array.isArray(data.deletedKeys) ? data.deletedKeys : [],
+          googleConfig: data.googleConfig || null,
+          updatedAt: data.updatedAt || Date.now(),
+        }
       }
     }
   } catch {
     // Server API not reachable (offline / static hosting)
   }
-  return []
+  return null
+}
+
+export async function syncSharedStudentsFromServer(): Promise<Student[]> {
+  const data = await syncSharedDataFromServer()
+  return data?.students || []
 }
 
 export async function broadcastStudentToServer(student: Student): Promise<boolean> {
@@ -117,10 +134,43 @@ export async function broadcastStudentToServer(student: Student): Promise<boolea
 
 export async function broadcastDeleteToServer(student: Partial<Student>): Promise<boolean> {
   try {
+    const sigs = generateStudentSignatures(student)
     const res = await fetch('/api/students', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: student.id, name: student.name }),
+      body: JSON.stringify({
+        id: student.id,
+        name: student.name,
+        signatures: sigs,
+      }),
+      signal: AbortSignal.timeout(4000),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+export async function broadcastRestoreToServer(): Promise<boolean> {
+  try {
+    const res = await fetch('/api/students', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ restoreAll: true }),
+      signal: AbortSignal.timeout(4000),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+export async function broadcastConfigToServer(config: any): Promise<boolean> {
+  try {
+    const res = await fetch('/api/students', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ googleConfig: config }),
       signal: AbortSignal.timeout(4000),
     })
     return res.ok
@@ -133,19 +183,17 @@ export const studentRepository: StudentRepository = {
   getAllSync: () => getInitialStudents(),
   getAll: async () => {
     const local = getInitialStudents()
-    const remote = await syncSharedStudentsFromServer()
-    if (remote.length > 0) {
-      const map = new Map<string, Student>()
-      // Prioritize remote shared students
-      remote.forEach((s) => map.set(s.id || `${s.name}_${s.className}_${s.topType}`, s))
-      // Merge local
-      local.forEach((s) => {
-        const k = s.id || `${s.name}_${s.className}_${s.topType}`
-        if (!map.has(k)) map.set(k, s)
-      })
-      const merged = Array.from(map.values()).filter((s) => !isStudentDeleted(s))
-      localStorage.setItem(STUDENTS_KEY, JSON.stringify(merged))
-      return merged
+    const remoteData = await syncSharedDataFromServer()
+    if (remoteData) {
+      if (Array.isArray(remoteData.deletedKeys)) {
+        saveDeletedKeys(remoteData.deletedKeys)
+      }
+      if (remoteData.students.length > 0) {
+        const currentDeleted = getDeletedKeys()
+        const merged = remoteData.students.filter((s) => !isStudentDeleted(s, currentDeleted))
+        localStorage.setItem(STUDENTS_KEY, JSON.stringify(merged))
+        return merged
+      }
     }
     return local
   },
@@ -155,7 +203,10 @@ export const studentRepository: StudentRepository = {
       await fetch('/api/students', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ students }),
+        body: JSON.stringify({
+          students,
+          deletedKeys: getDeletedKeys(),
+        }),
         signal: AbortSignal.timeout(4000),
       })
     } catch {}
@@ -178,6 +229,8 @@ export const studentRepository: StudentRepository = {
   },
   restoreAllDeleted: async () => {
     saveDeletedKeys([])
+    broadcastRestoreToServer()
+
     // Re-read with empty deleted keys
     const localSaved = loadLocalSavedStudents() || []
     const map = new Map<string, Student>()
@@ -187,22 +240,34 @@ export const studentRepository: StudentRepository = {
     currentPrimary.forEach((s) => map.set(`${s.name}_${s.className}_${s.topType}`, s))
     const restored = Array.from(map.values())
     localStorage.setItem(STUDENTS_KEY, JSON.stringify(restored))
+
+    try {
+      await fetch('/api/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ students: restored, restoreAll: true }),
+        signal: AbortSignal.timeout(4000),
+      })
+    } catch {}
+
     return restored
   },
   loadDemo: async () => {
     saveDeletedKeys([])
+    broadcastRestoreToServer()
     localStorage.setItem(STUDENTS_KEY, JSON.stringify(DEMO_STUDENTS))
     try {
       await fetch('/api/students', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ students: DEMO_STUDENTS }),
+        body: JSON.stringify({ students: DEMO_STUDENTS, restoreAll: true }),
       })
     } catch {}
     return DEMO_STUDENTS
   },
   reset: async () => {
     saveDeletedKeys([])
+    broadcastRestoreToServer()
     localStorage.removeItem(STUDENTS_KEY)
   },
 }

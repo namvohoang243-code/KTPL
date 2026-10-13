@@ -7,10 +7,13 @@ import {
   sendToGoogleForm,
 } from '@/services/googleService'
 import {
+  broadcastConfigToServer,
   getDeletedKeys,
   isStudentDeleted,
   resultRepository,
+  saveDeletedKeys,
   studentRepository,
+  syncSharedDataFromServer,
   syncSharedStudentsFromServer,
 } from '@/services/storage'
 import type { QuizResult, Student } from '@/types'
@@ -125,16 +128,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setGoogleSheetUrl = useCallback((sheetCsvUrl: string) => {
     const updated = saveGoogleConfig({ sheetCsvUrl })
     setGoogleConfigState(updated)
+    broadcastConfigToServer(updated)
   }, [])
 
   const setClassSize = useCallback((classSize: number) => {
     const updated = saveGoogleConfig({ classSize })
     setGoogleConfigState(updated)
+    broadcastConfigToServer(updated)
   }, [])
 
   const setShowStudentNames = useCallback((showNames: boolean) => {
     const updated = saveGoogleConfig({ showNames })
     setGoogleConfigState(updated)
+    broadcastConfigToServer(updated)
   }, [])
 
   useEffect(() => {
@@ -320,23 +326,62 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const syncShared = async () => {
       try {
-        const remote = await syncSharedStudentsFromServer()
-        if (!active || remote.length === 0) return
+        const remoteData = await syncSharedDataFromServer()
+        if (!active || !remoteData) return
 
-        setStudents((prev) => {
-          const map = new Map<string, Student>()
-          remote.forEach((s) => map.set(s.id || `${s.name}_${s.className}_${s.topType}`, s))
-          prev.forEach((s) => {
-            const k = s.id || `${s.name}_${s.className}_${s.topType}`
-            if (!map.has(k)) map.set(k, s)
-          })
-          const merged = Array.from(map.values()).filter((s) => !isStudentDeleted(s))
-          if (merged.length !== prev.length || merged.some((s, i) => s.id !== prev[i]?.id)) {
-            studentRepository.saveAll(merged)
-            return merged
+        // 1. Sync deletedKeys if provided by server
+        if (Array.isArray(remoteData.deletedKeys)) {
+          const currentDeleted = getDeletedKeys()
+          if (remoteData.deletedKeys.length === 0 && currentDeleted.length > 0) {
+            // Restore was called on another device
+            saveDeletedKeys([])
+            setDeletedCount(0)
+          } else {
+            const combined = Array.from(new Set([...currentDeleted, ...remoteData.deletedKeys]))
+            if (combined.length !== currentDeleted.length) {
+              saveDeletedKeys(combined)
+              setDeletedCount(combined.length)
+            }
           }
-          return prev
-        })
+        }
+
+        // 2. Sync googleConfig if provided by server
+        if (remoteData.googleConfig && remoteData.googleConfig.sheetCsvUrl) {
+          const currentConfig = getGoogleConfig()
+          if (
+            remoteData.googleConfig.sheetCsvUrl !== currentConfig.sheetCsvUrl ||
+            remoteData.googleConfig.classSize !== currentConfig.classSize ||
+            remoteData.googleConfig.showNames !== currentConfig.showNames
+          ) {
+            const updated = saveGoogleConfig(remoteData.googleConfig)
+            setGoogleConfigState(updated)
+          }
+        }
+
+        // 3. Sync students
+        const currentDeleted = getDeletedKeys()
+        const remoteStudents = remoteData.students || []
+        if (remoteStudents.length > 0) {
+          const validRemote = remoteStudents.filter((s) => !isStudentDeleted(s, currentDeleted))
+
+          setStudents((prev) => {
+            // Preserve locally-submitted quizzes not yet on server
+            const localOnly = prev.filter(
+              (s) => s.id?.startsWith('ME') && !remoteStudents.some((r) => r.id === s.id),
+            )
+            const nextList = [...validRemote, ...localOnly]
+
+            // If length or items differ, update
+            const isDiff =
+              nextList.length !== prev.length ||
+              nextList.some((s, idx) => s.id !== prev[idx]?.id || s.name !== prev[idx]?.name)
+
+            if (isDiff) {
+              return nextList
+            }
+            return prev
+          })
+        }
       } catch {}
     }
 
@@ -350,8 +395,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (document.visibilityState === 'visible') syncShared()
     })
 
-    // Auto-poll every 3.5 seconds
-    const pollTimer = setInterval(syncShared, 3500)
+    // Auto-poll every 3 seconds
+    const pollTimer = setInterval(syncShared, 3000)
 
     return () => {
       active = false

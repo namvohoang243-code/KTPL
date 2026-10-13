@@ -14,27 +14,53 @@ function sharedClassApiPlugin(): Plugin {
   const dataDir = fileURLToPath(new URL('./data', import.meta.url))
   const dataFilePath = path.join(dataDir, 'shared_students.json')
 
-  const readStudents = (): any[] => {
+  interface SharedStore {
+    students: any[]
+    deletedKeys: string[]
+    googleConfig: any | null
+    updatedAt: number
+  }
+
+  const readStore = (): SharedStore => {
     try {
       if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true })
       if (!fs.existsSync(dataFilePath)) {
-        fs.writeFileSync(dataFilePath, '[]', 'utf-8')
-        return []
+        const initial: SharedStore = {
+          students: [],
+          deletedKeys: [],
+          googleConfig: null,
+          updatedAt: Date.now(),
+        }
+        fs.writeFileSync(dataFilePath, JSON.stringify(initial, null, 2), 'utf-8')
+        return initial
       }
       const raw = fs.readFileSync(dataFilePath, 'utf-8')
       const parsed = JSON.parse(raw)
-      return Array.isArray(parsed) ? parsed : []
+      if (Array.isArray(parsed)) {
+        return {
+          students: parsed,
+          deletedKeys: [],
+          googleConfig: null,
+          updatedAt: Date.now(),
+        }
+      }
+      return {
+        students: Array.isArray(parsed.students) ? parsed.students : [],
+        deletedKeys: Array.isArray(parsed.deletedKeys) ? parsed.deletedKeys : [],
+        googleConfig: parsed.googleConfig || null,
+        updatedAt: parsed.updatedAt || Date.now(),
+      }
     } catch {
-      return []
+      return { students: [], deletedKeys: [], googleConfig: null, updatedAt: Date.now() }
     }
   }
 
-  const writeStudents = (students: any[]) => {
+  const writeStore = (store: SharedStore) => {
     try {
       if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true })
-      fs.writeFileSync(dataFilePath, JSON.stringify(students, null, 2), 'utf-8')
+      fs.writeFileSync(dataFilePath, JSON.stringify(store, null, 2), 'utf-8')
     } catch (e) {
-      console.error('Failed to write shared students file:', e)
+      console.error('Failed to write shared store file:', e)
     }
   }
 
@@ -53,9 +79,17 @@ function sharedClassApiPlugin(): Plugin {
         }
 
         if (req.method === 'GET') {
-          const list = readStudents()
+          const store = readStore()
           res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify({ success: true, students: list }))
+          res.end(
+            JSON.stringify({
+              success: true,
+              students: store.students,
+              deletedKeys: store.deletedKeys,
+              googleConfig: store.googleConfig,
+              updatedAt: store.updatedAt,
+            }),
+          )
           return
         }
 
@@ -67,36 +101,75 @@ function sharedClassApiPlugin(): Plugin {
           req.on('end', () => {
             try {
               const data = JSON.parse(body)
-              let current = readStudents()
+              const store = readStore()
 
-              // Batch save
-              if (Array.isArray(data.students)) {
-                writeStudents(data.students)
+              // 1. Restore all deleted students request
+              if (data.restoreAll === true) {
+                store.deletedKeys = []
+                store.updatedAt = Date.now()
+                writeStore(store)
                 res.setHeader('Content-Type', 'application/json')
-                res.end(JSON.stringify({ success: true, count: data.students.length }))
+                res.end(JSON.stringify({ success: true, restored: true, deletedKeys: [] }))
                 return
               }
 
-              // Single student
+              // 2. Sync deletedKeys
+              if (Array.isArray(data.deletedKeys)) {
+                store.deletedKeys = Array.from(new Set([...store.deletedKeys, ...data.deletedKeys]))
+              }
+
+              // 3. Sync googleConfig
+              if (data.googleConfig) {
+                store.googleConfig = { ...(store.googleConfig || {}), ...data.googleConfig }
+              }
+
+              // 4. Batch save students
+              if (Array.isArray(data.students)) {
+                store.students = data.students
+                store.updatedAt = Date.now()
+                writeStore(store)
+                res.setHeader('Content-Type', 'application/json')
+                res.end(
+                  JSON.stringify({
+                    success: true,
+                    count: store.students.length,
+                    deletedKeys: store.deletedKeys,
+                    googleConfig: store.googleConfig,
+                  }),
+                )
+                return
+              }
+
+              // 5. Single student submission from quiz
               if (data && (data.name || data.id)) {
-                const idx = current.findIndex(
+                const idx = store.students.findIndex(
                   (s: any) =>
                     (data.id && s.id === data.id) ||
                     (s.name === data.name && s.className === data.className && s.submittedAt === data.submittedAt),
                 )
                 if (idx >= 0) {
-                  current[idx] = data
+                  store.students[idx] = data
                 } else {
-                  current = [data, ...current]
+                  store.students = [data, ...store.students]
                 }
-                writeStudents(current)
+                store.updatedAt = Date.now()
+                writeStore(store)
                 res.setHeader('Content-Type', 'application/json')
-                res.end(JSON.stringify({ success: true, student: data, total: current.length }))
+                res.end(
+                  JSON.stringify({
+                    success: true,
+                    student: data,
+                    total: store.students.length,
+                    deletedKeys: store.deletedKeys,
+                  }),
+                )
                 return
               }
 
-              res.statusCode = 400
-              res.end(JSON.stringify({ error: 'Dữ liệu không hợp lệ' }))
+              store.updatedAt = Date.now()
+              writeStore(store)
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ success: true, store }))
             } catch (err) {
               res.statusCode = 500
               res.end(JSON.stringify({ error: String(err) }))
@@ -112,12 +185,32 @@ function sharedClassApiPlugin(): Plugin {
           })
           req.on('end', () => {
             try {
-              const { id, name } = JSON.parse(body)
-              let current = readStudents()
-              current = current.filter((s: any) => (id ? s.id !== id : s.name !== name))
-              writeStudents(current)
+              const { id, name, signatures } = JSON.parse(body)
+              const store = readStore()
+
+              // Append signatures to shared deletedKeys
+              const sigsToAdd = Array.isArray(signatures)
+                ? signatures
+                : [id, name].filter(Boolean)
+              store.deletedKeys = Array.from(new Set([...store.deletedKeys, ...sigsToAdd]))
+
+              // Remove matching students
+              store.students = store.students.filter((s: any) => {
+                if (id && s.id === id) return false
+                if (name && s.name === name) return false
+                return true
+              })
+
+              store.updatedAt = Date.now()
+              writeStore(store)
               res.setHeader('Content-Type', 'application/json')
-              res.end(JSON.stringify({ success: true, remaining: current.length }))
+              res.end(
+                JSON.stringify({
+                  success: true,
+                  remaining: store.students.length,
+                  deletedKeys: store.deletedKeys,
+                }),
+              )
             } catch {
               res.statusCode = 500
               res.end(JSON.stringify({ error: 'Lỗi khi xóa' }))
@@ -134,6 +227,10 @@ function sharedClassApiPlugin(): Plugin {
 
 export default defineConfig({
   base: './',
+  server: {
+    host: true,
+    port: 5173,
+  },
   plugins: [react(), tailwindcss(), sharedClassApiPlugin()],
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
